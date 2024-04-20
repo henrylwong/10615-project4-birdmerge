@@ -42,15 +42,29 @@ def main_train(args):
     if args.custom_run_name:
         wandb_run_name = args.custom_run_name
     wandb.init(project="BirdMerge", entity="mochaminds", name=wandb_run_name)
+    hyperparameters = {
+        "opt_lr": options.OPT_LR,
+        "do_AR_loss": options.DO_AR_LOSS,
+        "do_L1_reg": options.DO_L1_REG,
+        "recon_weight": options.RECON_WEIGHT,
+        "beta": options.BETA,
+        "gamma": options.GAMMA,
+        "ar_factor": options.AR_FACTOR,
+        "l1_reg_factor": options.L1_REG_FACTOR,
+    }
+    wandb.config.update(hyperparameters)
 
     # Begin Training
     with torch.autograd.set_detect_anomaly(True):
         for epoch in range(args.num_epochs):
             train_loss = _train(epoch, model, train_loader, optimizer, do_AR_loss=args.do_AR_loss, do_L1_reg=args.do_L1_reg)
-            wandb.log({"Train Loss": train_loss, "epoch": epoch + 1})
+            wandb.log({"train_loss": train_loss, "epoch": epoch + 1})
+
+            if (epoch + 1) % 50 == 0:
+                torch.save(model.state_dict(), os.path.join(options.SAVE_DIR, f"[{get_time()}]-STATE-AttriVAE-e{epoch + 1}.pt")) 
         
     # Save Model State
-    torch.save(model.state_dict(), f'[{get_time()}]-STATE-AttriVAE.pt')
+    torch.save(model.state_dict(), os.path.join(options.SAVES_DIRPATH, f'[{get_time()}]-STATE-AttriVAE.pt'))
 
 def _train(epoch_num, model, train_loader, optimizer, do_AR_loss, do_L1_reg):
     train_loss = 0
@@ -63,12 +77,12 @@ def _train(epoch_num, model, train_loader, optimizer, do_AR_loss, do_L1_reg):
         recon_loss = recon_Loss(recon_x=recon_batch, x=data, weight=options.RECON_WEIGHT)
         kl_loss = KL_Loss(z_dist, prior_dist, options.BETA)
         loss = recon_loss + kl_loss
-        print(f"Recon loss: {recon_loss.item()}; KL loss: {kl_loss.item()}; ", end="")
+        # print(f"Recon loss: {recon_loss.item()}; KL loss: {kl_loss.item()}; ", end="")
 
         if do_AR_loss: 
             attr_reg_loss = reg_Loss(z_tilde, features, gamma = options.GAMMA, factor = options.AR_FACTOR)
             loss += attr_reg_loss
-            print(f"AR loss: {attr_reg_loss.item()}; ", end="")
+            # print(f"AR loss: {attr_reg_loss.item()}; ", end="")
 
         if do_L1_reg:
             # L1 Regularization
@@ -77,8 +91,8 @@ def _train(epoch_num, model, train_loader, optimizer, do_AR_loss, do_L1_reg):
             for param in model.parameters():
                 weight_reg_loss += l1_crit(param, target=torch.zeros_like(param))
             loss += options.L1_REG_FACTOR * weight_reg_loss
-            print(f"Reg loss: {weight_reg_loss.item()}; ", end="")
-        print()
+            # print(f"Reg loss: {weight_reg_loss.item()}; ", end="")
+        # print()
 
         # Update Weights
         loss.backward()

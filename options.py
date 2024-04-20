@@ -23,6 +23,8 @@ IMG_PROCESSED_DIRPATH = "images-processed"
 IMGLIST_PROCESSED_FILEPATH = "images-processed.txt"
 FEATURES_DF_PKL_FILEPATH = 'features_df.pkl'
 
+SAVES_DIRPATH = "saves"
+
 """
 Dataset/Dataloader
 """
