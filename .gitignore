@@ -1,0 +1,8 @@
+__pycache__/
+
+# Data
+CUB_200_2011/
+
+# Preprocessing
+images-processed/
+box_preview.png
