@@ -3,10 +3,11 @@ from torch.nn import functional as F
 
 import options
  
-def KL_Loss(mu, logvar, beta):
-    KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
-    
-    return beta * KLD
+def KL_Loss(z_dist, prior_dist, beta, c=0.0):
+    KLD = torch.distributions.kl.kl_divergence(z_dist, prior_dist)
+    KLD = KLD.sum(1).mean()
+    KLD = beta * (KLD - c).abs()
+    return KLD
 
 def recon_Loss(recon_x, x, weight):
     # BCE = torch.nn.BCELoss(reduction="sum")
@@ -19,7 +20,7 @@ def recon_Loss(recon_x, x, weight):
 def reg_loss_sign(latent_code, attribute, factor=1.0):
    # Calculate both latent code and attribute distance matrices
    latent_code = latent_code.view(-1, 1).repeat(1, latent_code.shape[0])
-   latent_code_dist_mat = (latent_code - latent_code.tranpose(1, 0)).view(-1, 1)
+   latent_code_dist_mat = (latent_code - latent_code.transpose(1, 0)).view(-1, 1)
 
    attribute = attribute.view(-1, 1).repeat(1, attribute.shape[0])
    attribute_dist_mat = (attribute - attribute.transpose(1, 0)).view(-1, 1)

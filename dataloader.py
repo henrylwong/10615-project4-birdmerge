@@ -35,7 +35,7 @@ class ImgAttrDataset(Dataset):
                 self.image_paths.append(lines[1])
 
         self.transforms = transforms
-        self.features = feature_df.values
+        self.features = np.asarray(feature_df.values, dtype=float)
 
     def __len__(self):
         return len(self.image_paths)

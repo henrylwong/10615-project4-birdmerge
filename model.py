@@ -2,6 +2,20 @@ import torch
 import torch.nn as nn
 from torchsummary import summary
 
+def initialize_weights(m):
+  if isinstance(m, nn.Conv2d):
+     nn.init.xavier_uniform_(m.weight)
+     m.bias.data.fill_(0.01)
+  elif isinstance(m, nn.BatchNorm2d):
+     nn.init.constant_(m.weight.data, 1)
+     nn.init.constant_(m.bias.data, 0)
+  elif isinstance(m, nn.BatchNorm1d):
+     nn.init.constant_(m.weight.data, 1)
+     nn.init.constant_(m.bias.data, 0)
+  elif isinstance(m, nn.Linear):
+     nn.init.xavier_uniform_(m.weight.data)
+     nn.init.constant_(m.bias.data, 0)
+     
 class AttriVAE(nn.Module):
     def __init__(self, image_channels, hidden_dim, latent_dim, encoder_channels, decoder_channels):
         super(AttriVAE, self).__init__()
@@ -32,7 +46,7 @@ class AttriVAE(nn.Module):
                                      nn.LeakyReLU(),)
         
         self.fc_encoder = nn.Sequential(nn.Flatten(), 
-                                        nn.Linear(8 * 8 * self.encoder_channels[4], self.hidden_dim))
+                                        nn.Linear(8 * 8 * self.encoder_channels[4], self.hidden_dim)) # @henry: Attri-VAE has intermediate layer here
         
         self.mean = nn.Linear(self.hidden_dim, self.latent_dim)
         self.logvar = nn.Linear(self.hidden_dim, self.latent_dim)
@@ -84,10 +98,13 @@ class AttriVAE(nn.Module):
         epsilon = torch.randn_like(logvar)
         z_sampled = mu + torch.sqrt(torch.exp(logvar)) * epsilon
         
-        z_distribution = torch.distributions.Normal(loc=mu, scale=torch.exp(logvar))
-        z_tilde = z_distribution.rsample()
+        z_dist = torch.distributions.Normal(loc=mu, scale=torch.exp(logvar))
+        z_tilde = z_dist.rsample()
+        
+        prior_dist = torch.distributions.Normal(loc=torch.zeros_like(z_dist.loc),scale=torch.ones_like(z_dist.scale))
+        z_prior = prior_dist.sample()
 
-        return z_sampled, z_tilde
+        return z_sampled, z_tilde, z_prior, z_dist, prior_dist
     
     def forward(self, x):
         encoded = self.encoder(x)
@@ -99,7 +116,7 @@ class AttriVAE(nn.Module):
         mu = self.mean(encoded)
         logvar = self.logvar(encoded)
         
-        z, z_tilde = self.reparametrize(mu, logvar)
+        z_sampled, z_tilde, z_prior, z_dist, prior_dist = self.reparametrize(mu, logvar)
         print(f"Shape of z_tilde: {z_tilde.shape}")
 
         decoded = self.fc_decoder(z_tilde) 
@@ -109,7 +126,7 @@ class AttriVAE(nn.Module):
         decoded = self.decoder(reshaped)
         print(f"Shape after decoder: {decoded.shape}")
 
-        return decoded
+        return decoded, mu, logvar, z_tilde, z_dist, prior_dist
         
 if __name__ == "__main__":
     model = AttriVAE(3, 96, 64, (8, 16, 32, 64, 2), (64, 32, 16, 8, 4, 2))
