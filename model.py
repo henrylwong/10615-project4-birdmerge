@@ -4,17 +4,19 @@ from torchsummary import summary
 
 def initialize_weights(m):
   if isinstance(m, nn.Conv2d):
-     nn.init.xavier_uniform_(m.weight)
-     m.bias.data.fill_(0.01)
+    # nn.init.xavier_uniform_(m.weight)
+    nn.init.uniform_(m.weight, -0.08, 0.08)
+    m.bias.data.fill_(0.01)
   elif isinstance(m, nn.BatchNorm2d):
-     nn.init.constant_(m.weight.data, 1)
-     nn.init.constant_(m.bias.data, 0)
+    nn.init.constant_(m.weight.data, 1)
+    nn.init.constant_(m.bias.data, 0)
   elif isinstance(m, nn.BatchNorm1d):
-     nn.init.constant_(m.weight.data, 1)
-     nn.init.constant_(m.bias.data, 0)
+    nn.init.constant_(m.weight.data, 1)
+    nn.init.constant_(m.bias.data, 0)
   elif isinstance(m, nn.Linear):
-     nn.init.xavier_uniform_(m.weight.data)
-     nn.init.constant_(m.bias.data, 0)
+    # nn.init.xavier_uniform_(m.weight.data)
+    nn.init.uniform_(m.weight, -0.08, 0.08)
+    nn.init.constant_(m.bias.data, 0)
      
 class AttriVAE(nn.Module):
     def __init__(self, image_channels, hidden_dim, latent_dim, encoder_channels, decoder_channels):
@@ -108,23 +110,23 @@ class AttriVAE(nn.Module):
     
     def forward(self, x):
         encoded = self.encoder(x)
-        print(f"Shape after encoder: {encoded.shape}")
+        # print(f"Shape after encoder: {encoded.shape}")
 
         encoded = self.fc_encoder(encoded)
-        print(f"Shape after fc_encoder: {encoded.shape}")
+        # print(f"Shape after fc_encoder: {encoded.shape}")
 
         mu = self.mean(encoded)
         logvar = self.logvar(encoded)
         
         z_sampled, z_tilde, z_prior, z_dist, prior_dist = self.reparametrize(mu, logvar)
-        print(f"Shape of z_tilde: {z_tilde.shape}")
+        # print(f"Shape of z_tilde: {z_tilde.shape}")
 
         decoded = self.fc_decoder(z_tilde) 
-        print(f"Shape after fc_decoder: {decoded.shape}")
+        # print(f"Shape after fc_decoder: {decoded.shape}")
         
         reshaped = decoded.view(decoded.size(0), self.encoder_channels[4], 8, 8) # @henry: double check view values
         decoded = self.decoder(reshaped)
-        print(f"Shape after decoder: {decoded.shape}")
+        # print(f"Shape after decoder: {decoded.shape}")
 
         return decoded, mu, logvar, z_tilde, z_dist, prior_dist
         

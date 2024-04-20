@@ -40,6 +40,8 @@ DECODER_CHANNELS = (64, 32, 16, 8, 4, 4)
 NUM_EPOCHS = 1000
 OPT_LR = 0.001
 
+DO_AR_LOSS = True
+DO_L1_REG = True
 
 """
 Training Params
