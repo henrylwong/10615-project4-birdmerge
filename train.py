@@ -74,6 +74,8 @@ def _train(epoch_num, model, train_loader, optimizer):
         loss.backward()
         optimizer.step()
 
+        train_loss += loss
+
     train_loss /= len(train_loader)
     print(f"E{str(epoch_num + 1).zfill(4)} || Train loss: {train_loss}")
 
