@@ -27,7 +27,7 @@ def main_train(args):
     train_loader = get_dataloader(options.IMG_PROCESSED_DIRPATH, options.IMGLIST_PROCESSED_FILEPATH, features_df)
 
     # Model
-    model = AttriVAE(image_channels=options.IMG_CHANNELS, hidden_dim=options.HIDDEN_DIM, latent_dim=options.LATENT_DIM, encoder_channels=options.ENCODER_CHANNELS, decoder_channels=options.DECODER_CHANNELS)
+    model = AttriVAE(image_channels=options.IMG_CHANNELS, hidden_dim=options.HIDDEN_DIM, latent_dim=options.LATENT_DIM, encoder_channels=options.ENCODER_CHANNELS, decoder_channels=options.DECODER_CHANNELS).to(DEVICE)
     model.apply(initialize_weights)
     
     # Optimizer
