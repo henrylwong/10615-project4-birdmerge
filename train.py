@@ -3,6 +3,7 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from torch.optim.lr_scheduler import LambdaLR
 import pickle
 import os
 import sys
@@ -32,10 +33,11 @@ def main_train(args):
     
     # Optimizer
     optimizer = optim.Adam(model.parameters(), lr=args.opt_lr)
+    lambda_lr = LambdaLR(optimizer, lr_lambda=lambda epoch: 0.0001 if epoch < 20 else args.opt_lr)
 
     # Resume
     if args.resume:
-        latest_file = max([(f, os.path.getmtime(os.path.join(options.SAVES_DIRPATH, f))) for f in os.listdir(options.SAVES_DIRPATH)], key=lambda x: x[1])[0]
+        latest_file = max([(os.path.join(options.SAVES_DIRPATH, f), os.path.getmtime(os.path.join(options.SAVES_DIRPATH, f))) for f in os.listdir(options.SAVES_DIRPATH)], key=lambda x: x[1])[0]
         checkpoint = torch.load(latest_file)
         model.load_state_dict(checkpoint["model_state"])
         optimizer.load_state_dict(checkpoint["optimizer_state"])
@@ -50,6 +52,10 @@ def main_train(args):
         wandb_run_name = args.custom_run_name
     wandb.init(project="BirdMerge", entity="mochaminds", name=wandb_run_name)
     hyperparameters = {
+        "hidden_dim": options.HIDDEN_DIM,
+        "latent_dim": options.LATENT_DIM,
+        "encoder_channels": options.ENCODER_CHANNELS,
+        "decoder_channels": options.DECODER_CHANNELS,
         "opt_lr": options.OPT_LR,
         "do_AR_loss": options.DO_AR_LOSS,
         "do_L1_reg": options.DO_L1_REG,
@@ -65,6 +71,7 @@ def main_train(args):
     with torch.autograd.set_detect_anomaly(True):
         for epoch in range(args.num_epochs):
             train_loss = _train(epoch, model, train_loader, optimizer, do_AR_loss=args.do_AR_loss, do_L1_reg=args.do_L1_reg)
+            lambda_lr.step()
             wandb.log({'train_loss': train_loss}, step=epoch)
 
             if (epoch + 1) % 50 == 0:
