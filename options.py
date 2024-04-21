@@ -35,9 +35,11 @@ Model
 """
 IMG_CHANNELS = 3
 HIDDEN_DIM = 100
-LATENT_DIM = 32 # @henry: 29 attributes to be encoded
-ENCODER_CHANNELS = (8, 16, 32, 64, 4)
-DECODER_CHANNELS = (64, 32, 16, 8, 4, 4)
+LATENT_DIM = 64 # @henry: 29 attributes to be encoded
+ENCODER_CHANNELS = (16, 32, 64, 128, 32)
+DECODER_CHANNELS = (128, 64, 32, 16, 8)
+# ENCODER_CHANNELS = (16, 32, 64, 128, 256, 64)
+# DECODER_CHANNELS = (256, 128, 128, 64, 32, 8)
 
 NUM_EPOCHS = 1000
 OPT_LR = 0.001

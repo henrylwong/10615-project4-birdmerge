@@ -2,7 +2,7 @@ import torch
 from torch.nn import functional as F
 
 import options
- 
+
 def KL_Loss(z_dist, prior_dist, beta, c=0.0):
     KLD = torch.distributions.kl.kl_divergence(z_dist, prior_dist)
     KLD = KLD.sum(1).mean()

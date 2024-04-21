@@ -33,6 +33,13 @@ def main_train(args):
     # Optimizer
     optimizer = optim.Adam(model.parameters(), lr=args.opt_lr)
 
+    # Resume
+    if args.resume:
+        latest_file = max([(f, os.path.getmtime(os.path.join(options.SAVES_DIRPATH, f))) for f in os.listdir(options.SAVES_DIRPATH)], key=lambda x: x[1])[0]
+        checkpoint = torch.load(latest_file)
+        model.load_state_dict(checkpoint["model_state"])
+        optimizer.load_state_dict(checkpoint["optimizer_state"])
+
     if args.summary:
         summary(model, (3, 128, 128))
         sys.exit(0)
@@ -58,13 +65,13 @@ def main_train(args):
     with torch.autograd.set_detect_anomaly(True):
         for epoch in range(args.num_epochs):
             train_loss = _train(epoch, model, train_loader, optimizer, do_AR_loss=args.do_AR_loss, do_L1_reg=args.do_L1_reg)
-            wandb.log({"train_loss": train_loss, "epoch": epoch + 1})
+            wandb.log({'train_loss': train_loss}, step=epoch)
 
             if (epoch + 1) % 50 == 0:
-                torch.save(model.state_dict(), os.path.join(options.SAVE_DIR, f"[{get_time()}]-STATE-AttriVAE-e{epoch + 1}.pt")) 
+                torch.save({"model_state": model.state_dict(), "optimizer_state": optimizer.state_dict}, os.path.join(options.SAVE_DIR, f"[{get_time()}]-STATE-AttriVAE-e{epoch + 1}.pt")) 
         
     # Save Model State
-    torch.save(model.state_dict(), os.path.join(options.SAVES_DIRPATH, f'[{get_time()}]-STATE-AttriVAE.pt'))
+    torch.save({"model_state": model.state_dict(), "optimizer_state": optimizer.state_dict}, os.path.join(options.SAVES_DIRPATH, f'[{get_time()}]-STATE-AttriVAE.pt'))
 
 def _train(epoch_num, model, train_loader, optimizer, do_AR_loss, do_L1_reg):
     train_loss = 0
@@ -112,6 +119,7 @@ if __name__ == "__main__":
     parser.add_argument("--custom_run_name", type=str, default=None, help="Custom Wandb run name")
     parser.add_argument("--do_AR_loss", type=bool, default=options.DO_AR_LOSS, help="Flag to enable AR loss")
     parser.add_argument("--do_L1_reg", type=bool, default=options.DO_L1_REG, help="Flag to enable L1 regularization")
+    parser.add_argument("--resume", action="store_true", default=False, help="Flag to resume training from previous saved state")
     args = parser.parse_args()
 
     main_train(args)

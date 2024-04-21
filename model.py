@@ -48,7 +48,8 @@ class AttriVAE(nn.Module):
                                      nn.LeakyReLU(),)
         
         self.fc_encoder = nn.Sequential(nn.Flatten(), 
-                                        nn.Linear(8 * 8 * self.encoder_channels[4], self.hidden_dim)) # @henry: Attri-VAE has intermediate layer here
+                                        nn.Linear(8 * 8 * self.encoder_channels[4], 8 * 8 * self.encoder_channels[4] // 2),
+                                        nn.Linear(8 * 8 * self.encoder_channels[4] // 2, self.hidden_dim)) # @henry: Attri-VAE has intermediate layer here
         
         self.mean = nn.Linear(self.hidden_dim, self.latent_dim)
         self.logvar = nn.Linear(self.hidden_dim, self.latent_dim)
@@ -56,11 +57,37 @@ class AttriVAE(nn.Module):
         self.fc_decoder = nn.Sequential(nn.Linear(self.latent_dim, self.hidden_dim),
                                         nn.Linear(self.hidden_dim, 8 * 8 * self.encoder_channels[4]),)
         
-        self.decoder = nn.Sequential(nn.Conv2d(in_channels = self.encoder_channels[4], out_channels=self.decoder_channels[0], kernel_size=3, stride=1, padding=1),
-                                     nn.BatchNorm2d(self.decoder_channels[0]),
-                                     nn.LeakyReLU(),
+        # self.decoder = nn.Sequential(nn.Conv2d(in_channels = self.encoder_channels[4], out_channels=self.decoder_channels[0], kernel_size=3, stride=1, padding=1),
+        #                              nn.BatchNorm2d(self.decoder_channels[0]),
+        #                              nn.LeakyReLU(),
                                      
-                                     nn.ConvTranspose2d(in_channels = self.decoder_channels[0], out_channels=self.decoder_channels[0], kernel_size=3, stride=2, padding=1, output_padding=1),
+        #                              nn.ConvTranspose2d(in_channels = self.decoder_channels[0], out_channels=self.decoder_channels[0], kernel_size=3, stride=2, padding=1, output_padding=1),
+        #                              nn.BatchNorm2d(self.decoder_channels[0]),
+        #                              nn.LeakyReLU(),
+                                     
+        #                              nn.ConvTranspose2d(in_channels = self.decoder_channels[0], out_channels=self.decoder_channels[1], kernel_size=3, stride=2, padding=1, output_padding=1),
+        #                              nn.BatchNorm2d(self.decoder_channels[1]),
+        #                              nn.LeakyReLU(),
+                                     
+        #                              nn.ConvTranspose2d(in_channels = self.decoder_channels[1], out_channels=self.decoder_channels[2], kernel_size=3, stride=2, padding=1, output_padding=1),
+        #                              nn.BatchNorm2d(self.decoder_channels[2]),
+        #                              nn.LeakyReLU(),
+                                     
+        #                              nn.ConvTranspose2d(in_channels = self.decoder_channels[2], out_channels=self.decoder_channels[3], kernel_size=3, stride=2, padding=1, output_padding=1),
+        #                              nn.BatchNorm2d(self.decoder_channels[3]),
+        #                              nn.LeakyReLU(),
+                                     
+        #                              nn.Conv2d(in_channels = self.decoder_channels[3], out_channels=self.decoder_channels[4], kernel_size=3, stride=1, padding=1),
+        #                              nn.BatchNorm2d(self.decoder_channels[4]),
+        #                              nn.LeakyReLU(),
+                                     
+        #                              nn.Conv2d(in_channels = self.decoder_channels[4], out_channels=image_channels, kernel_size=3, stride=1, padding=1),
+        #                              nn.BatchNorm2d(image_channels),
+        #                              nn.LeakyReLU(),
+                                     
+        #                              nn.Sigmoid()) # for [0, 1] to match ToTensor
+        
+        self.decoder = nn.Sequential(nn.Conv2d(in_channels = self.encoder_channels[4], out_channels=self.decoder_channels[0], kernel_size=3, stride=1, padding=1),
                                      nn.BatchNorm2d(self.decoder_channels[0]),
                                      nn.LeakyReLU(),
                                      
@@ -76,7 +103,7 @@ class AttriVAE(nn.Module):
                                      nn.BatchNorm2d(self.decoder_channels[3]),
                                      nn.LeakyReLU(),
                                      
-                                     nn.Conv2d(in_channels = self.decoder_channels[3], out_channels=self.decoder_channels[4], kernel_size=3, stride=1, padding=1),
+                                     nn.ConvTranspose2d(in_channels = self.decoder_channels[3], out_channels=self.decoder_channels[4], kernel_size=3, stride=2, padding=1, output_padding=1),
                                      nn.BatchNorm2d(self.decoder_channels[4]),
                                      nn.LeakyReLU(),
                                      

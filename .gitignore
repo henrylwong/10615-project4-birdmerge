@@ -7,5 +7,8 @@ CUB_200_2011/
 images-processed/
 box_preview.png
 
+# Model Saves
+saves/
+
 # Wandb
 wandb/
