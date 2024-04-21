@@ -68,7 +68,7 @@ def main_train(args):
             wandb.log({'train_loss': train_loss}, step=epoch)
 
             if (epoch + 1) % 50 == 0:
-                torch.save({"model_state": model.state_dict(), "optimizer_state": optimizer.state_dict}, os.path.join(options.SAVE_DIR, f"[{get_time()}]-STATE-AttriVAE-e{epoch + 1}.pt")) 
+                torch.save({"model_state": model.state_dict(), "optimizer_state": optimizer.state_dict}, os.path.join(options.SAVES_DIRPATH, f"[{get_time()}]-STATE-AttriVAE-e{epoch + 1}.pt")) 
         
     # Save Model State
     torch.save({"model_state": model.state_dict(), "optimizer_state": optimizer.state_dict}, os.path.join(options.SAVES_DIRPATH, f'[{get_time()}]-STATE-AttriVAE.pt'))
