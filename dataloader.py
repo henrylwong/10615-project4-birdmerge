@@ -51,12 +51,12 @@ class ImgAttrDataset(Dataset):
         
         return image, features
            
-def get_dataloader(img_dirpath, imglist_filepath, feature_df):
+def get_dataloader(img_dirpath, imglist_filepath, feature_df, batch_size=None):
     data_transforms = transforms.Compose([
         transforms.ToTensor(),
     ])
 
     dataset = ImgAttrDataset(img_dirpath, imglist_filepath, feature_df, data_transforms)
-    dataloader = DataLoader(dataset, batch_size = options.LOADER_BATCH_SIZE, shuffle=True)
+    dataloader = DataLoader(dataset, batch_size = options.LOADER_BATCH_SIZE if not batch_size else batch_size, shuffle=True)
     
     return dataloader
